@@ -37,7 +37,7 @@ def playwright_worker(url: str, return_dict):
     final_url = url
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
             page = browser.new_page()
             page.goto(url, wait_until="domcontentloaded", timeout=20000)
             page.wait_for_timeout(2000)
