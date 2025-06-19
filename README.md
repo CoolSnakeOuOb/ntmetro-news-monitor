@@ -1,134 +1,109 @@
+# 🚇 新北捷運輿情監測系統
 
-# 📰 ntmetro-news-monitor
+本系統是一個基於 Streamlit 的網頁應用，透過 Google News + Gemini AI，協助使用者每日快速抓取、篩選與整理與捷運相關的新聞，並自動分類與產出 LINE 通報格式的報表。
 
-新北捷運輿情監控系統  
-使用 Streamlit + Playwright + Docker 技術，提供每日輿情快速整理工具，產出可直接複製貼上至 LINE 群組的新聞彙整內容。
+---
+[應用程式截圖](https://github.com/user-attachments/assets/855b9dbb-e72b-466b-bcac-88600fa67acd)
+
+## 🔧 功能簡介
+
+- 🔍 **新聞抓取**：使用 [SerpApi](https://serpapi.com/) 從 Google News 即時搜尋關鍵字新聞。
+- 🤖 **AI 智能推薦**：結合 Google Gemini AI 模型，自動挑選與「新北捷運」最相關的新聞。
+- 🗂️ **分類勾選**：使用者可依 AI 建議進行修正，並為每篇新聞手動分類。
+- 📤 **報表產出**：自動產生格式化的 LINE 訊息內容，方便主管群組分享。
 
 ---
 
-## 🔧 功能說明
+## 🚀 使用方法
 
-- 🔎 支援多組自訂新聞關鍵字
-- 📰 取得 Google News RSS 24 小時內最新新聞
-- 🌐 自動解析 Google News 中轉跳轉網址，取回真實新聞連結
-- 📝 產生 LINE 群組格式，可快速貼上回報
-- 📦 全程封裝於 Docker 容器，部署簡單穩定
-- ☁️ 完整支援 Render.com 雲端自動部署
+1. **安裝依賴套件**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **設定 API 金鑰**
+
+   在 `.streamlit/secrets.toml` 中設定以下內容：
+
+   ```toml
+   GEMINI_API_KEY = "your_google_gemini_api_key"
+   [serpapi_keys]
+   帳號名稱1 = "your_serpapi_key_1"
+   帳號名稱2 = "your_serpapi_key_2"
+
+   ```
+
+3. **啟動應用程式**
+
+   ```bash
+   streamlit run app.py
+   ```
 
 ---
 
-## 📂 專案架構
 
-```bash
-ntmetro-news-monitor/
-├── app.py              # 主程式 (Streamlit + Playwright邏輯)
-├── requirements.txt     # Python 套件需求清單
-├── Dockerfile           # Docker 部署腳本
-├── .gitignore           # Git 版本控管忽略規則
-└── README.md            # 專案說明文件 (本文件)
+## 📁 專案結構
+
+```
+.
+├── app.py                  # 主程式：Streamlit App
+├── requirements.txt        # 相依套件清單
+└── .streamlit/
+    └── secrets.toml        # 私密金鑰設定檔（請勿上傳）
 ```
 
 ---
 
-## ⚠ 核心技術重點
+## 🧠 AI Prompt 範例
 
-### 使用架構
-- 前端框架：Streamlit
-- 爬蟲來源：Google News RSS Feed
-- 網址跳轉解析：Playwright (Chromium headless)
-- 文字擷取格式：自動產出 LINE 可複製格式
-- 容器化部署：Docker + Render
-
-### Playwright 相關
-- 需完整安裝瀏覽器
-- 使用 `playwright install --with-deps chromium` 自動拉取依賴套件
+系統預設使用以下提示詞進行 Gemini AI 分析：
+"""
+你是新北捷運公司的輿情觀測員，你的任務是從每日新聞中，挑選出與公司業務最相關、或可能需要高層注意的事件。
+請從以下新聞標題列表中，挑選出 3-5 則與「新北市」、「捷運工程」、「列車狀況」、「民眾抱怨」或「重大意外」最相關的新聞。
+避免選擇標題內容相似的新聞。
+"""
 
 ---
 
-## 🚀 本地端開發執行
+## 🛡️ 注意事項
 
-### 環境準備
-
-- Python 3.9
-- pip
-
-### 安裝依賴
-
-```bash
-pip install -r requirements.txt
-playwright install chromium
-```
-
-### 啟動
-
-```bash
-streamlit run app.py
-```
+- **SerpApi** 有查詢次數限制，請確認額度。
+- **Gemini API** 使用的是 `gemini-1.5-flash` 模型，需正確設置金鑰。
+- 本系統目前僅支援中文新聞、且針對「當日」新聞進行過濾。
 
 ---
 
-## 🐳 雲端部署完整流程（Render.com）
+# 技術選型與版本演進比較報告：API 驅動 vs. 瀏覽器模擬
 
-### 1️⃣ 建立 Render 帳號
-- https://render.com/
-
-### 2️⃣ 建立 Web Service
-- 環境類型：**Docker**
-- 連結 GitHub Repository
-- Region 選擇：**Singapore (Asia)**
-
-### 3️⃣ 完整自動部署
-- Render 會依照 `Dockerfile` 自動進行：
-  - Build
-  - Deploy
-  - Routing 設定
-- 不需任何本地端 `docker build` 動作
+以下說明了「新北捷運新聞輿情工具」從第一代 Playwright 模擬瀏覽器版本，演進到第二代 API 驅動版本的關鍵考量與技術差異。
 
 ---
 
-## 🔨 Dockerfile 核心說明
+## 📊 技術演進比較表
 
-```dockerfile
-FROM python:3.9-slim
-
-# 安裝 Playwright 依賴套件
-RUN apt-get update && apt-get install -y \
-    wget curl unzip fonts-liberation libnss3 libatk-bridge2.0-0 libgtk-3-0 libxss1 libasound2 libgbm-dev libxshmfence-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Playwright 需搭配 --with-deps 確保瀏覽器依賴完整
-RUN playwright install --with-deps chromium
-
-COPY . .
-
-CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=8501"]
-```
+| 特性 / 面向 | 🏆 第二代：API 驅動版 (本版本) | ⚙️ 第一代：Playwright 瀏覽器模擬版 |
+|------------|----------------------------------|----------------------------------|
+| 核心技術 | **API 呼叫**：向 SerpApi / Gemini 發送結構化 HTTP 請求，接收 JSON 結果。 | **Browser Simulation**：完整啟動 Chrome 瀏覽器，模擬用戶互動。 |
+| 執行速度 | **極快**，數秒內完成多關鍵字查詢。 | **非常慢**，每次都需啟動瀏覽器、等待頁面載入。 |
+| 部署便利性 | **高**，可部署在 Streamlit Cloud 或任何雲端。 | **極低**，瀏覽器模擬需伺服器支援圖形環境。 |
+| 系統資源耗用 | **低**，主要為網路 I/O。 | **高**，CPU/記憶體佔用嚴重。 |
+| 穩定性與維護 | **高**，依賴 API 規格穩定性。 | **中等**，易因目標網站改版導致錯誤。 |
+| 外部依賴 | **需要 API 金鑰**，使用 SerpApi 和 Gemini。 | **不需金鑰**，但需處理驗證碼、反爬蟲等問題。 |
+| 功能擴展性 | **極高**，可擴充 AI、翻譯、分析等功能。 | **有限**，整合其他服務困難。 |
 
 ---
 
-## 🎯 內部操作流程 (使用者)
+### 第一代 (Playwright)
 
-1️⃣ 輸入關鍵字（預設提供可編輯欄位）  
-2️⃣ 點選「📥 抓取新聞」取得最新 Google News 資料  
-3️⃣ 勾選新聞條目  
-4️⃣ 點選「📤 產生 LINE 訊息」  
-5️⃣ 按下「📋 複製到剪貼簿」 → 貼上 LINE 群組使用
+- 優勢：真實模擬瀏覽器、精確抓取頁面資料。
+- 劣勢：部署困難、速度極慢、資源消耗高。
+- 適用：學術測試、本機自用腳本。
 
----
+### 第二代 (API)
 
-## 🔧 進階規劃 (未來擴充)
-
-- ⏰ 自動排程每日產出
-- 📈 紀錄輿情每日變化趨勢
-- 📬 自動寄信回報機制
-- 🔐 內部帳號權限管理
-- 🐳 Docker Build cache 最佳化
-- ⚙ CI/CD 自動化部署流程
-
----
-
+- 優勢：極快執行速度、可雲端部署、高穩定性。
+- 關鍵特色：
+  - 支援多 SerpApi 金鑰切換與剩餘次數查詢。
+  - 結合 Gemini AI 進行智慧篩選與推薦。
+  - 架構模組化，方便未來加入更多分析功能。
